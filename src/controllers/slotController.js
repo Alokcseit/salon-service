@@ -41,10 +41,13 @@ export const getAvailableSlots = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Salon not found" });
     }
 
-    const slotDate = new Date(date);
-    slotDate.setHours(0, 0, 0, 0);
+    // Keep date at midnight UTC to match how createBooking stores dates
+    const slotDate = new Date(date + "T00:00:00.000Z");
 
-    const dayName = slotDate.toLocaleString("en-us", { weekday: "long" }).toLowerCase();
+    // Use UTC-based day name to stay timezone-agnostic
+    const utcDay = slotDate.getUTCDay();
+    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const dayName = days[utcDay];
     const dayTiming = salon.timings?.[dayName];
 
     if (!dayTiming || dayTiming.isClosed) {
@@ -102,11 +105,12 @@ export const getAvailableSlots = async (req, res, next) => {
       }));
     }
 
-    // Filter out past times for today
+    // Filter out past times for today (UTC)
     const now = new Date();
-    const isToday = slotDate.toDateString() === now.toDateString();
+    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const isToday = slotDate.getTime() === todayUTC.getTime();
     if (isToday) {
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const currentMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
       slots = slots.filter((s) => {
         const [time, period] = s.time.split(" ");
         const [h, m] = time.split(":").map(Number);
