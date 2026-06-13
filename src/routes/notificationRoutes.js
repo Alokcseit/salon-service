@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getSalonNotifications,
+  getCustomerNotifications,
   markNotificationRead,
   markAllNotificationsRead,
 } from "../controllers/notificationController.js";
@@ -15,17 +16,22 @@ router.get(
   getSalonNotifications
 );
 
-router.put(
-  "/salon/read-all",
+router.get(
+  "/customer",
   protect,
-  authorize("salon"),
+  authorize("customer"),
+  getCustomerNotifications
+);
+
+router.put(
+  "/read-all",
+  protect,
   markAllNotificationsRead
 );
 
 router.put(
   "/:id/read",
   protect,
-  authorize("salon"),
   markNotificationRead
 );
 

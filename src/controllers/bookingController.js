@@ -12,6 +12,11 @@ import {
   sendWhatsApp,
 } from "../utils/sendWhatsApp.js";
 
+import {
+  sendPushNotification,
+  sendPushToSalonOwner,
+} from "../utils/sendPushNotification.js";
+
 // @desc   Create booking request (pending)
 // @route  POST /api/bookings
 // @access Private (customer)
@@ -86,6 +91,18 @@ export const createBooking = async (req, res, next) => {
       channels: { inApp: { sent: true, sentAt: new Date() } },
     });
 
+    // Push notification to salon owner
+    sendPushToSalonOwner({
+      salon,
+      title: "New Booking Request",
+      body: `${customerName} wants to book ${serviceName} at ${timeSlot}`,
+      data: {
+        type: "booking_request",
+        bookingId: booking._id.toString(),
+        salonId: salon._id.toString(),
+      },
+    });
+
     res.status(201).json({
       success: true,
       message: "Booking request sent! Waiting for salon confirmation.",
@@ -148,6 +165,17 @@ export const respondToBooking = async (req, res, next) => {
         channels: { inApp: { sent: true, sentAt: new Date() } },
       });
 
+      // Push notification to customer
+      sendPushNotification({
+        userId: booking.userId,
+        title: "Booking Confirmed!",
+        body: `Your ${booking.service.name} at ${booking.timeSlot} is confirmed by ${salon.salonName}.`,
+        data: {
+          type: "booking_confirmed",
+          bookingId: booking._id.toString(),
+        },
+      });
+
       // Send email
       if (booking.customerEmail) {
         await sendEmail({
@@ -182,6 +210,17 @@ export const respondToBooking = async (req, res, next) => {
         title: "Booking Rejected",
         message: `Your ${booking.service.name} booking on ${booking.date.toLocaleDateString("en-IN")} at ${booking.timeSlot} was declined. Reason: ${rejectReason || "Not specified"}`,
         channels: { inApp: { sent: true, sentAt: new Date() } },
+      });
+
+      // Push notification to customer
+      sendPushNotification({
+        userId: booking.userId,
+        title: "Booking Rejected",
+        body: `Your ${booking.service.name} on ${booking.date.toLocaleDateString("en-IN")} was declined. Reason: ${rejectReason || "Not specified"}`,
+        data: {
+          type: "booking_rejected",
+          bookingId: booking._id.toString(),
+        },
       });
     }
 
@@ -292,7 +331,72 @@ export const completeBooking = async (req, res, next) => {
     booking.status = "completed";
     await booking.save();
 
+    // Push notification to customer
+    sendPushNotification({
+      userId: booking.userId,
+      title: "Service Completed",
+      body: `Your ${booking.service.name} session is complete. Please leave a review!`,
+      data: {
+        type: "booking_completed",
+        bookingId: booking._id.toString(),
+      },
+    });
+
     res.status(200).json({ success: true, message: "Booking completed", data: booking });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc   Add review to completed booking
+// @route  PUT /api/bookings/:bookingId/review
+// @access Private (customer)
+export const addReview = async (req, res, next) => {
+  try {
+    const { rating, comment } = req.body;
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, message: "Rating must be between 1 and 5" });
+    }
+
+    const booking = await Booking.findById(req.params.bookingId);
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
+
+    if (booking.userId !== req.user.id) {
+      return res.status(403).json({ success: false, message: "Not your booking" });
+    }
+
+    if (booking.status !== "completed") {
+      return res.status(400).json({ success: false, message: "Can only review completed bookings" });
+    }
+
+    booking.review = {
+      rating,
+      comment: comment || "",
+      reviewedAt: new Date(),
+    };
+
+    await booking.save();
+
+    // Update salon's average rating
+    const completedBookings = await Booking.find({
+      salonId: booking.salonId,
+      status: "completed",
+      "review.rating": { $exists: true },
+    });
+
+    const totalRating = completedBookings.reduce((sum, b) => sum + (b.review?.rating || 0), 0);
+    const avgRating = completedBookings.length > 0 ? totalRating / completedBookings.length : 0;
+
+    await Salon.findByIdAndUpdate(booking.salonId, {
+      $set: {
+        "stats.averageRating": Math.round(avgRating * 10) / 10,
+        "stats.totalReviews": completedBookings.length,
+      },
+    });
+
+    res.status(200).json({ success: true, message: "Review submitted", data: booking });
   } catch (error) {
     next(error);
   }

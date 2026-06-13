@@ -14,6 +14,7 @@ import slotRoutes from "./routes/slotRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import deviceTokenRoutes from "./routes/deviceTokenRoutes.js";
 
 import errorHandler from "./middleware/errorMiddleware.js";
 
@@ -124,6 +125,11 @@ app.use(
 app.use(
   "/api/notifications",
   notificationRoutes
+);
+
+app.use(
+  "/api/notifications",
+  deviceTokenRoutes
 );
 
 // 404 Handler

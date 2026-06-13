@@ -52,23 +52,55 @@ export const markNotificationRead = async (req, res, next) => {
   }
 };
 
+// @desc   Get notifications for customer
+// @route  GET /api/notifications/customer
+// @access Private (customer)
+export const getCustomerNotifications = async (req, res, next) => {
+  try {
+    const notifications = await Notification.find({ userId: req.user.id })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .populate("salonId", "salonName");
+
+    const unreadCount = await Notification.countDocuments({
+      userId: req.user.id,
+      isRead: false,
+    });
+
+    res.status(200).json({
+      success: true,
+      count: notifications.length,
+      unreadCount,
+      data: notifications,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc   Mark all notifications as read
-// @route  PUT /api/notifications/salon/read-all
-// @access Private (salon_owner)
+// @route  PUT /api/notifications/read-all
+// @access Private
 export const markAllNotificationsRead = async (req, res, next) => {
   try {
-    const salon = await Salon.findOne({ ownerId: req.user.id });
-    if (!salon) {
-      return res.status(404).json({ success: false, message: "Salon not found" });
+    let filter = { isRead: false };
+
+    if (req.user.userType === "salon") {
+      const salon = await Salon.findOne({ ownerId: req.user.id });
+      if (!salon) {
+        return res.status(404).json({ success: false, message: "Salon not found" });
+      }
+      filter.salonId = salon._id;
+    } else {
+      filter.userId = req.user.id;
     }
 
-    await Notification.updateMany(
-      { salonId: salon._id, isRead: false },
-      { isRead: true, readAt: new Date() }
-    );
+    await Notification.updateMany(filter, { isRead: true, readAt: new Date() });
 
     res.status(200).json({ success: true, message: "All notifications marked as read" });
   } catch (error) {
     next(error);
   }
 };
+
+

@@ -7,6 +7,7 @@ import {
   getSalonBookings,
   cancelBooking,
   completeBooking,
+  addReview,
 } from "../controllers/bookingController.js";
 
 import {
@@ -55,6 +56,13 @@ router.put(
   protect,
   authorize("salon"),
   completeBooking
+);
+
+router.put(
+  "/:bookingId/review",
+  protect,
+  authorize("customer"),
+  addReview
 );
 
 export default router;
