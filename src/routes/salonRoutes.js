@@ -7,6 +7,7 @@ import {
   updateSalon,
   getSalonById,
   getAllSalons,
+  getNearbySalons,
 } from "../controllers/salonController.js";
 
 import {
@@ -15,6 +16,8 @@ import {
 } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
+
+router.get("/nearby", getNearbySalons);
 
 router.get("/", getAllSalons);
 

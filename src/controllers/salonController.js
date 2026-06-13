@@ -89,6 +89,67 @@ export const getSalonById = async (
   }
 };
 
+// @desc   Get nearby salons with search, rating & openNow filters
+// @route  GET /api/salon/nearby
+// @access Public
+export const getNearbySalons = async (req, res, next) => {
+  try {
+    const { lat, lng, maxDistance = 10000, search, sortBy } = req.query;
+
+    const filter = { isActive: true };
+
+    if (lat && lng) {
+      filter["address.location"] = {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [parseFloat(lng), parseFloat(lat)],
+          },
+          $maxDistance: parseInt(maxDistance),
+        },
+      };
+    }
+
+    if (search) {
+      filter.salonName = new RegExp(search, "i");
+    }
+
+    let salons = await Salon.find(filter).select("-subscription").lean();
+
+    // Open Now filter — evaluate in-memory cos day keys are dynamic
+    if (sortBy === "openNow") {
+      const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+      const now = new Date();
+      const dayName = days[now.getDay()];
+      const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+      salons = salons.filter((salon) => {
+        const dayTiming = salon.timings?.[dayName];
+        if (!dayTiming || dayTiming.isClosed) return false;
+        if (!dayTiming.open || !dayTiming.close) return false;
+        if (dayTiming.open <= dayTiming.close) {
+          return currentTime >= dayTiming.open && currentTime <= dayTiming.close;
+        }
+        // Overnight hours (e.g., 22:00 — 02:00)
+        return currentTime >= dayTiming.open || currentTime <= dayTiming.close;
+      });
+    }
+
+    // Top Rated sorting
+    if (sortBy === "rating") {
+      salons.sort((a, b) => (b.stats?.averageRating || 0) - (a.stats?.averageRating || 0));
+    }
+
+    res.status(200).json({
+      success: true,
+      count: salons.length,
+      data: salons,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc   Get all active salons
 // @route  GET /api/salon
 // @access Public

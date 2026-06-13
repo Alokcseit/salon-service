@@ -1,12 +1,12 @@
-// salon-service/src/routes/bookingRoutes.js
-
 import express from "express";
 
 import {
   createBooking,
+  respondToBooking,
   getMyBookings,
   getSalonBookings,
   cancelBooking,
+  completeBooking,
 } from "../controllers/bookingController.js";
 
 import {
@@ -21,6 +21,13 @@ router.post(
   protect,
   authorize("customer"),
   createBooking
+);
+
+router.put(
+  "/:bookingId/respond",
+  protect,
+  authorize("salon"),
+  respondToBooking
 );
 
 router.get(
@@ -41,6 +48,13 @@ router.put(
   "/:bookingId/cancel",
   protect,
   cancelBooking
+);
+
+router.put(
+  "/:bookingId/complete",
+  protect,
+  authorize("salon"),
+  completeBooking
 );
 
 export default router;

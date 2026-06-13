@@ -10,8 +10,10 @@ import serviceRoutes from "./routes/serviceRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import queueRoutes from "./routes/queueRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
+import slotRoutes from "./routes/slotRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 import errorHandler from "./middleware/errorMiddleware.js";
 
@@ -112,6 +114,16 @@ app.use(
 app.use(
   "/api/profile",
   profileRoutes
+);
+
+app.use(
+  "/api/slots",
+  slotRoutes
+);
+
+app.use(
+  "/api/notifications",
+  notificationRoutes
 );
 
 // 404 Handler
