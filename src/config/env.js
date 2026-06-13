@@ -9,6 +9,7 @@ const env = {
   MONGO_URI: process.env.MONGO_URI,
   JWT_SECRET: process.env.JWT_SECRET,
   AUTH_SERVICE_URL: process.env.AUTH_SERVICE_URL,
+  SALON_SERVICE_URL: process.env.SALON_SERVICE_URL,
   CLIENT_URL: process.env.CLIENT_URL || "http://localhost:5173",
   NODE_ENV: process.env.NODE_ENV || "development",
   EMAIL_HOST: process.env.EMAIL_HOST,
