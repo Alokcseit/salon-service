@@ -24,7 +24,7 @@ router.get(
 router.get(
   "/salon",
   protect,
-  authorize("salon_owner"),
+  authorize("salon"),
   getSalonOwnerProfile
 );
 

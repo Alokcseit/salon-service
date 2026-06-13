@@ -4,6 +4,7 @@ import express from "express";
 
 import {
   addService,
+  getMyServices,
   getServicesBySalon,
   updateService,
   deleteService,
@@ -17,6 +18,13 @@ import {
 const router = express.Router();
 
 router.get(
+  "/my-services",
+  protect,
+  authorize("salon"),
+  getMyServices
+);
+
+router.get(
   "/:salonId",
   getServicesBySalon
 );
@@ -24,21 +32,21 @@ router.get(
 router.post(
   "/",
   protect,
-  authorize("salon_owner"),
+  authorize("salon"),
   addService
 );
 
 router.put(
   "/:serviceId",
   protect,
-  authorize("salon_owner"),
+  authorize("salon"),
   updateService
 );
 
 router.delete(
   "/:serviceId",
   protect,
-  authorize("salon_owner"),
+  authorize("salon"),
   deleteService
 );
 

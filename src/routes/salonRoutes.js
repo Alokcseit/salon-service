@@ -26,14 +26,14 @@ router.get(
 router.post(
   "/profile",
   protect,
-  authorize("salon_owner"),
+  authorize("salon"),
   createOrGetSalon
 );
 
 router.put(
   "/profile",
   protect,
-  authorize("salon_owner"),
+  authorize("salon"),
   updateSalon
 );
 

@@ -33,6 +33,24 @@ export const addService = async (req, res, next) => {
   }
 };
 
+// @desc   Get my services (for salon owner)
+// @route  GET /api/services/my-services
+// @access Private (salon_owner)
+export const getMyServices = async (req, res, next) => {
+  try {
+    const salon = await Salon.findOne({ ownerId: req.user.id });
+    if (!salon) {
+      return res.status(404).json({ success: false, message: "Salon not found" });
+    }
+
+    const services = await Service.find({ salonId: salon._id }).sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, count: services.length, data: services });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc   Get services by salon
 // @route  GET /api/services/:salonId
 // @access Public

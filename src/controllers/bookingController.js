@@ -389,7 +389,7 @@ export const cancelBooking =
 
         cancelledBy:
           req.user.userType ===
-          "salon_owner"
+          "salon"
             ? "salon"
             : "customer",
 

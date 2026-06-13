@@ -46,15 +46,10 @@ export const updateSalon = async (req, res, next) => {
       {
         new: true,
         runValidators: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
       }
     );
-
-    if (!salon) {
-      return res.status(404).json({
-        success: false,
-        message: "Salon not found",
-      });
-    }
 
     res.status(200).json({
       success: true,

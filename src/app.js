@@ -10,6 +10,8 @@ import serviceRoutes from "./routes/serviceRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import queueRoutes from "./routes/queueRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
+import settingsRoutes from "./routes/settingsRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 
 import errorHandler from "./middleware/errorMiddleware.js";
 
@@ -79,12 +81,22 @@ app.get("/health", (req, res) => {
 // Routes
 app.use(
   "/api/salon",
+  settingsRoutes
+);
+
+app.use(
+  "/api/salon",
   salonRoutes
 );
 
 app.use(
   "/api/services",
   serviceRoutes
+);
+
+app.use(
+  "/api/upload",
+  uploadRoutes
 );
 
 app.use(

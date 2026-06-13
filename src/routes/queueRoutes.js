@@ -24,14 +24,14 @@ router.get(
 router.put(
   "/:bookingId/start",
   protect,
-  authorize("salon_owner"),
+  authorize("salon"),
   startService
 );
 
 router.put(
   "/:bookingId/complete",
   protect,
-  authorize("salon_owner"),
+  authorize("salon"),
   completeService
 );
 
