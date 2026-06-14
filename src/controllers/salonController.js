@@ -1,6 +1,7 @@
 // salon-service/src/controllers/salonController.js
 
 import Salon from "../models/Salon.js";
+import Booking from "../models/Booking.js";
 
 // @desc   Create or get salon profile
 // @route  POST /api/salon/profile
@@ -149,6 +150,54 @@ export const getNearbySalons = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc   Get all reviews for a salon
+// @route  GET /api/salon/:salonId/reviews
+// @access Public
+export const getSalonReviews =
+  async (req, res, next) => {
+    try {
+      const bookings =
+        await Booking.find({
+          salonId:
+            req.params.salonId,
+          status: "completed",
+          "review.rating": {
+            $exists: true,
+          },
+        })
+          .select(
+            "customerName review createdAt"
+          )
+          .sort({
+            "review.reviewedAt":
+              -1,
+          });
+
+      const salon =
+        await Salon.findById(
+          req.params.salonId
+        ).select(
+          "stats.averageRating stats.totalReviews salonName"
+        );
+
+      res.status(200).json({
+        success: true,
+        data: bookings,
+        averageRating:
+          salon?.stats
+            ?.averageRating || 0,
+        totalReviews:
+          salon?.stats
+            ?.totalReviews || 0,
+        salonName:
+          salon?.salonName ||
+          "",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 
 // @desc   Get all active salons
 // @route  GET /api/salon

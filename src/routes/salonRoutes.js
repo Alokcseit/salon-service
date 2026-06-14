@@ -8,6 +8,7 @@ import {
   getSalonById,
   getAllSalons,
   getNearbySalons,
+  getSalonReviews,
 } from "../controllers/salonController.js";
 
 import {
@@ -20,6 +21,11 @@ const router = express.Router();
 router.get("/nearby", getNearbySalons);
 
 router.get("/", getAllSalons);
+
+router.get(
+  "/:salonId/reviews",
+  getSalonReviews
+);
 
 router.get(
   "/:salonId",
