@@ -81,54 +81,54 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Routes
+// Routes - support both /api/* and /* for flexibility
 app.use(
-  "/api/salon",
+  ["/api/salon", "/salon"],
   settingsRoutes
 );
 
 app.use(
-  "/api/salon",
+  ["/api/salon", "/salon"],
   salonRoutes
 );
 
 app.use(
-  "/api/services",
+  ["/api/services", "/services"],
   serviceRoutes
 );
 
 app.use(
-  "/api/upload",
+  ["/api/upload", "/upload"],
   uploadRoutes
 );
 
 app.use(
-  "/api/bookings",
+  ["/api/bookings", "/bookings"],
   bookingRoutes
 );
 
 app.use(
-  "/api/queue",
+  ["/api/queue", "/queue"],
   queueRoutes
 );
 
 app.use(
-  "/api/profile",
+  ["/api/profile", "/profile"],
   profileRoutes
 );
 
 app.use(
-  "/api/slots",
+  ["/api/slots", "/slots"],
   slotRoutes
 );
 
 app.use(
-  "/api/notifications",
+  ["/api/notifications", "/notifications"],
   notificationRoutes
 );
 
 app.use(
-  "/api/notifications",
+  ["/api/notifications", "/notifications"],
   deviceTokenRoutes
 );
 
