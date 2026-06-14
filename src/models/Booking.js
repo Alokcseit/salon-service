@@ -70,6 +70,19 @@ const bookingSchema = new mongoose.Schema(
     actualStartTime: Date,
     actualEndTime: Date,
 
+    // Walk-in
+    isWalkIn: {
+      type: Boolean,
+      default: false,
+    },
+
+    checkedIn: {
+      type: Boolean,
+      default: false,
+    },
+
+    checkedInAt: Date,
+
     // Queue Management
     queuePosition: {
       type: Number,

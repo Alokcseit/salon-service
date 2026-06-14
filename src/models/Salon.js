@@ -143,6 +143,30 @@ const salonSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    // Queue Settings
+    queueSettings: {
+      autoNotifyDelay: {
+        type: Boolean,
+        default: true,
+      },
+      delayThreshold: {
+        type: Number,
+        default: 5,
+      },
+      whatsappNotifications: {
+        type: Boolean,
+        default: false,
+      },
+      walkInAllowed: {
+        type: Boolean,
+        default: true,
+      },
+      maxQueueSize: {
+        type: Number,
+        default: 20,
+      },
+    },
   },
   {
     timestamps: true,

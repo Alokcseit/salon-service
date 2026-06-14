@@ -6,6 +6,8 @@ import {
   getQueue,
   startService,
   completeService,
+  walkIn,
+  checkIn,
 } from "../controllers/queueController.js";
 
 import {
@@ -33,6 +35,19 @@ router.put(
   protect,
   authorize("salon"),
   completeService
+);
+
+router.post(
+  "/walk-in",
+  protect,
+  authorize("salon"),
+  walkIn
+);
+
+router.put(
+  "/:bookingId/checkin",
+  protect,
+  checkIn
 );
 
 export default router;
