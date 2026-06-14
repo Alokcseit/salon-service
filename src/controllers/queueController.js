@@ -50,15 +50,40 @@ export const getQueue = async (
         scheduledStartTime: 1,
       });
 
-    const queueWithDelays =
+    const delayMap =
       calculateQueueDelays(
         bookings
       );
 
+    const queueWithFullData =
+      bookings.map((b) => {
+        const bObj =
+          b.toObject();
+        const delay =
+          delayMap.find(
+            (d) =>
+              d.bookingId.toString() ===
+              bObj._id.toString()
+          );
+        return {
+          ...bObj,
+          estimatedDelay:
+            delay?.estimatedDelay ||
+            0,
+          newArrivalTime:
+            delay?.newArrivalTime ||
+            null,
+          hasSignificantDelay:
+            delay?.hasSignificantDelay ||
+            false,
+        };
+      });
+
     res.status(200).json({
       success: true,
-      count: bookings.length,
-      data: queueWithDelays,
+      count:
+        queueWithFullData.length,
+      data: queueWithFullData,
     });
   } catch (error) {
     next(error);
@@ -209,9 +234,35 @@ export const completeService =
           scheduledStartTime: 1,
         });
 
-      const updatedDelays =
+      const delayArray =
         calculateQueueDelays(
           remainingBookings
+        );
+
+      const updatedQueue =
+        remainingBookings.map(
+          (b) => {
+            const bObj =
+              b.toObject();
+            const delay =
+              delayArray.find(
+                (d) =>
+                  d.bookingId.toString() ===
+                  bObj._id.toString()
+              );
+            return {
+              ...bObj,
+              estimatedDelay:
+                delay?.estimatedDelay ||
+                0,
+              newArrivalTime:
+                delay?.newArrivalTime ||
+                null,
+              hasSignificantDelay:
+                delay?.hasSignificantDelay ||
+                false,
+            };
+          }
         );
 
       // Emit socket event
@@ -225,7 +276,7 @@ export const completeService =
             {
               bookingId:
                 booking._id,
-              updatedDelays,
+              updatedQueue,
             }
           );
       }
@@ -233,7 +284,7 @@ export const completeService =
       res.status(200).json({
         success: true,
         data: booking,
-        updatedDelays,
+        updatedQueue,
       });
     } catch (error) {
       next(error);
