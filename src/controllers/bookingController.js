@@ -165,7 +165,7 @@ export const respondToBooking = async (req, res, next) => {
         channels: { inApp: { sent: true, sentAt: new Date() } },
       });
 
-      // Push notification to customer
+      // Push, email, WhatsApp — fire in background, don't block response
       sendPushNotification({
         userId: booking.userId,
         title: "Booking Confirmed!",
@@ -176,22 +176,21 @@ export const respondToBooking = async (req, res, next) => {
         },
       });
 
-      // Send email
       if (booking.customerEmail) {
-        await sendEmail({
+        sendEmail({
           to: booking.customerEmail,
           subject: "Booking Confirmed - Silverscisor",
           html: bookingConfirmedTemplate(booking.customerName, booking),
         });
       }
 
-      // Send WhatsApp (gold/platinum only)
       if (["gold", "platinum"].includes(salon.subscription.plan) && booking.customerPhone) {
         const msg = `Hi ${booking.customerName}! Your ${booking.service.name} booking is confirmed for ${booking.date.toLocaleDateString("en-IN")} at ${booking.timeSlot}. Price: ₹${booking.service.price}. See you soon! - ${salon.salonName}`;
-        const waResult = await sendWhatsApp({ phone: booking.customerPhone, message: msg });
-        if (!waResult.skipped) {
-          await Salon.findByIdAndUpdate(salon._id, { $inc: { "subscription.tokenBalance": -1 } });
-        }
+        sendWhatsApp({ phone: booking.customerPhone, message: msg }).then((res) => {
+          if (!res.skipped) {
+            Salon.findByIdAndUpdate(salon._id, { $inc: { "subscription.tokenBalance": -1 } }).catch(() => {});
+          }
+        });
       }
     } else {
       booking.status = "rejected";
