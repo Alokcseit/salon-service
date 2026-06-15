@@ -75,8 +75,6 @@ app.use(cors({
   ]
 }));
 
-// ✅ Preflight requests handle karo
-app.options('*', cors());
 
 
 
