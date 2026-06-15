@@ -26,23 +26,60 @@ const app = express();
 app.use(helmet());
 
 // CORS
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      process.env.CLIENT_URL,
-    ],
-    credentials: true,
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "DELETE",
-      "PATCH",
-    ],
-  })
-);
+// app.use(
+//   cors({
+//     origin: [
+//       "http://localhost:5173",
+//       "http://localhost:3000",
+//       process.env.CLIENT_URL,
+//     ],
+//     credentials: true,
+//     methods: [
+//       "GET",
+//       "POST",
+//       "PUT",
+//       "DELETE",
+//       "PATCH",
+//     ],
+//   })
+// );
+
+
+app.use(cors({
+  origin: [
+    // Web
+    'http://localhost:5173',
+    'http://localhost:3000',
+    process.env.CLIENT_URL,
+
+    // ✅ Capacitor Android ke liye
+    'capacitor://localhost',
+    'http://localhost',
+    'ionic://localhost',
+
+    // ✅ Android WebView ke liye
+    'https://localhost',
+    'null',  // Android WebView sometimes sends null
+
+    // ✅ Production domain
+    'https://silverscisor.netlify.app'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ]
+}));
+
+// ✅ Preflight requests handle karo
+app.options('*', cors());
+
+
+
 
 // Body Parser
 app.use(
