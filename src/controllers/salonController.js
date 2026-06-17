@@ -224,7 +224,9 @@ export const getSalonsByService = async (req, res, next) => {
       serviceFilter.category = category;
     }
 
-    if (name) {
+    // Only use name filter when no category is provided (e.g. recommendations)
+    // When category is given, salon service names may differ (e.g. "Classic beard" vs "Beard Trim")
+    if (name && !category && !categories) {
       serviceFilter.name = { $regex: name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
     }
 
