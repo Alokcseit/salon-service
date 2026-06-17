@@ -2,6 +2,7 @@
 
 import Salon from "../models/Salon.js";
 import Booking from "../models/Booking.js";
+import Service from "../models/Service.js";
 
 // @desc   Create or get salon profile
 // @route  POST /api/salon/profile
@@ -198,6 +199,84 @@ export const getSalonReviews =
       next(error);
     }
   };
+
+// @desc   Get salons offering a specific service (by category or name)
+// @route  GET /api/salon/offering-service
+// @access Public
+export const getSalonsByService = async (req, res, next) => {
+  try {
+    const { category, name, categories, lat, lng, maxDistance = 10000 } = req.query;
+
+    if (!category && !name && !categories) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide category, name, or categories to search services"
+      });
+    }
+
+    const serviceFilter = { isAvailable: true };
+
+    // If multiple categories (comma-separated, e.g. "haircut,beard")
+    if (categories) {
+      const catArray = categories.split(",");
+      serviceFilter.category = { $in: catArray };
+    } else if (category) {
+      serviceFilter.category = category;
+    }
+
+    if (name) {
+      serviceFilter.name = { $regex: name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
+    }
+
+    const services = await Service.find(serviceFilter).lean();
+
+    if (!services.length) {
+      return res.status(200).json({ success: true, count: 0, data: [] });
+    }
+
+    // For multi-category, find salons that have services in ALL requested categories
+    let salonIds;
+    if (categories) {
+      const catArray = categories.split(",");
+      const grouped = {};
+      services.forEach(s => {
+        if (!grouped[s.salonId]) grouped[s.salonId] = new Set();
+        grouped[s.salonId].add(s.category);
+      });
+      salonIds = Object.entries(grouped)
+        .filter(([, cats]) => catArray.every(c => cats.has(c)))
+        .map(([id]) => id);
+    } else {
+      salonIds = [...new Set(services.map(s => s.salonId.toString()))];
+    }
+
+    const salonFilter = { _id: { $in: salonIds }, isActive: true };
+
+    if (lat && lng) {
+      salonFilter["address.location"] = {
+        $near: {
+          $geometry: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
+          $maxDistance: parseInt(maxDistance),
+        },
+      };
+    }
+
+    let salons = await Salon.find(salonFilter)
+      .select("-subscription")
+      .lean();
+
+    const result = salons.map(salon => {
+      const salonServices = services.filter(
+        s => s.salonId.toString() === salon._id.toString()
+      );
+      return { ...salon, services: salonServices };
+    });
+
+    res.status(200).json({ success: true, count: result.length, data: result });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // @desc   Get all active salons
 // @route  GET /api/salon
